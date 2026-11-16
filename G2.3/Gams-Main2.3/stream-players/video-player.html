@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YouTube & Video Player</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 24px;
+            background: #171717;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        main { width: min(100%, 1000px); margin: 0 auto; }
+        a { color: #fff; }
+        form { display: flex; gap: 8px; margin: 24px 0 12px; }
+        input {
+            flex: 1;
+            min-width: 0;
+            padding: 12px;
+            border: 1px solid #555;
+            border-radius: 6px;
+            background: #252525;
+            color: #fff;
+        }
+        button {
+            padding: 12px 18px;
+            border: 0;
+            border-radius: 6px;
+            background: #5865f2;
+            color: #fff;
+            cursor: pointer;
+        }
+        #player-error { color: #ff8585; }
+        .player {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            border: 0;
+            background: #000;
+        }
+        .player[hidden] { display: none; }
+        video { object-fit: contain; }
+        @media (max-width: 560px) {
+            body { padding: 16px; }
+            form { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <a href="../index.html">Back to games</a>
+        <h1>YouTube & Video Player</h1>
+        <p>Enter a YouTube link or a direct MP4, WebM, or Ogg video URL.</p>
+        <form id="player-form">
+            <input id="video-url" type="url" required placeholder="Paste a video URL" aria-label="Video URL">
+            <button type="submit">Play</button>
+        </form>
+        <p id="player-error" role="alert" hidden></p>
+        <iframe id="youtube-player" class="player" title="YouTube video player" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen hidden></iframe>
+        <video id="direct-player" class="player" controls playsinline hidden></video>
+    </main>
+    <script>
+        const form = document.getElementById("player-form");
+        const input = document.getElementById("video-url");
+        const error = document.getElementById("player-error");
+        const youtubePlayer = document.getElementById("youtube-player");
+        const directPlayer = document.getElementById("direct-player");
+
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            error.hidden = true;
+            youtubePlayer.hidden = true;
+            youtubePlayer.removeAttribute("src");
+            directPlayer.pause();
+            directPlayer.hidden = true;
+            directPlayer.removeAttribute("src");
+
+            try {
+                const url = new URL(input.value);
+                let videoId = "";
+                const host = url.hostname.toLowerCase();
+
+                if (host === "youtu.be") {
+                    videoId = url.pathname.split("/").filter(Boolean)[0] || "";
+                } else if (["youtube.com", "www.youtube.com", "m.youtube.com", "youtube-nocookie.com", "www.youtube-nocookie.com"].includes(host)) {
+                    videoId = url.searchParams.get("v") || url.pathname.match(/^\/(?:embed|shorts|live)\/([^/?]+)/)?.[1] || "";
+                }
+
+                if (/^[A-Za-z0-9_-]{11}$/.test(videoId)) {
+                    youtubePlayer.src = `https://www.youtube-nocookie.com/embed/${videoId}`;
+                    youtubePlayer.hidden = false;
+                    return;
+                }
+
+                if ([".mp4", ".webm", ".ogg", ".ogv"].some((extension) => url.pathname.toLowerCase().endsWith(extension))) {
+                    directPlayer.src = url.href;
+                    directPlayer.hidden = false;
+                    directPlayer.load();
+                    return;
+                }
+
+                throw new Error("Enter a valid YouTube link or a direct MP4, WebM, or Ogg video URL.");
+            } catch (reason) {
+                error.textContent = reason instanceof TypeError
+                    ? "Enter a valid video URL."
+                    : reason.message;
+                error.hidden = false;
+            }
+        });
+    </script>
+</body>
+</html>

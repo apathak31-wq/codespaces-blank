@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stream Portal</title>
+    <style>
+        * { box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; margin: 0; }
+        body {
+            display: flex;
+            flex-direction: column;
+            background: #171717;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 16px;
+            background: #222;
+        }
+        header a { color: #fff; }
+        h1 { margin: 0; font-size: 1.1rem; }
+        #frame-error { margin: 16px; }
+        iframe {
+            flex: 1;
+            width: 100%;
+            min-height: 0;
+            border: 0;
+            background: #fff;
+        }
+        iframe[hidden], #frame-error[hidden] { display: none; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="../index.html">Back to games</a>
+        <h1 id="page-title">Stream Portal</h1>
+    </header>
+    <p id="frame-error" role="alert" hidden></p>
+    <iframe id="portal-frame" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="no-referrer" title="Stream portal" hidden></iframe>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const title = params.get("title") || "Stream Portal";
+        const destination = params.get("url");
+        const pageTitle = document.getElementById("page-title");
+        const frame = document.getElementById("portal-frame");
+        const error = document.getElementById("frame-error");
+
+        document.title = title;
+        pageTitle.textContent = title;
+
+        try {
+            const url = new URL(destination);
+            if (!["http:", "https:"].includes(url.protocol)) {
+                throw new Error("Unsupported URL protocol.");
+            }
+
+            frame.src = url.href;
+            frame.title = `${title} portal`;
+            frame.hidden = false;
+        } catch {
+            error.textContent = "This portal URL is missing or invalid. Return to the catalog and choose another option.";
+            error.hidden = false;
+        }
+    </script>
+</body>
+</html>
